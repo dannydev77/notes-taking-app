@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= note ? 'Edit' : 'New' %> Note</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1><%= note ? 'Edit Note' : 'Create New Note' %></h1>
+    
+    <form action="<%= note ? `/notes/${id}` : '/notes' %>" method="POST">
+      <% if (note) { %>
+        <input type="hidden" name="createdAt" value="<%= note.createdAt %>">
+      <% } %>
+      
+      <div class="form-group">
+        <label for="title">Title</label>
+        <input type="text" id="title" name="title" value="<%= note ? note.title : '' %>" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="content">Content (Markdown supported)</label>
+        <textarea id="content" name="content" rows="10" required><%= note ? note.content : '' %></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label for="categories">Categories (comma separated)</label>
+        <input type="text" id="categories" name="categories" 
+               value="<%= note && note.categories ? note.categories.join(', ') : '' %>">
+      </div>
+      
+      <div class="form-group">
+        <label for="tags">Tags (comma separated, without #)</label>
+        <input type="text" id="tags" name="tags" 
+               value="<%= note && note.tags ? note.tags.join(', ') : '' %>">
+      </div>
+      
+      <div class="actions">
+        <button type="submit" class="btn">Save</button>
+        <a href="<%= note ? `/notes/${id}` : '/' %>" class="btn secondary">Cancel</a>
+      </div>
+    </form>
+    
+    <% if (note) { %>
+      <div class="markdown-preview">
+        <h3>Preview</h3>
+        <div id="preview-content"></div>
+      </div>
+      
+      <script>
+        // Live Markdown preview
+        const contentTextarea = document.getElementById('content');
+        const previewContent = document.getElementById('preview-content');
+        
+        contentTextarea.addEventListener('input', function() {
+          // In a real app, you'd use a proper Markdown parser
+          previewContent.innerHTML = marked.parse(this.value);
+        });
+        
+        // Initial preview
+        previewContent.innerHTML = marked.parse(contentTextarea.value);
+      </script>
+    <% } %>
+  </div>
+</body>
+</html>

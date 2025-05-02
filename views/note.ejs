@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= note.title %></title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1><%= note.title %></h1>
+    
+    <div class="meta">
+      <span class="date">Created: <%= new Date(note.createdAt).toLocaleString() %></span>
+      <% if (note.updatedAt !== note.createdAt) { %>
+        <span class="date">Updated: <%= new Date(note.updatedAt).toLocaleString() %></span>
+      <% } %>
+    </div>
+    
+    <% if (note.categories && note.categories.length > 0) { %>
+      <div class="categories">
+        <strong>Categories:</strong>
+        <% note.categories.forEach(category => { %>
+          <a href="/?category=<%= encodeURIComponent(category) %>" class="category"><%= category %></a>
+        <% }) %>
+      </div>
+    <% } %>
+    
+    <% if (note.tags && note.tags.length > 0) { %>
+      <div class="tags">
+        <strong>Tags:</strong>
+        <% note.tags.forEach(tag => { %>
+          <a href="/?tag=<%= encodeURIComponent(tag) %>" class="tag">#<%= tag %></a>
+        <% }) %>
+      </div>
+    <% } %>
+    
+    <div class="note-content">
+      <%- note.htmlContent %>
+    </div>
+    
+    <div class="actions">
+      <a href="/notes/<%= id %>/edit" class="btn">Edit</a>
+      <form action="/notes/<%= id %>/delete" method="POST" style="display: inline;">
+        <button type="submit" class="btn danger">Delete</button>
+      </form>
+      <a href="/" class="btn secondary">Back to All Notes</a>
+    </div>
+  </div>
+</body>
+</html>
