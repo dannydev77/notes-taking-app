@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notebooks</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Notebooks</h1>
+    <a href="/" class="btn">Back to Notes</a>
+    
+    <form action="/notebooks" method="POST" class="notebook-form">
+      <div class="form-group">
+        <label for="name">New Notebook Name</label>
+        <input type="text" id="name" name="name" required>
+        <button type="submit" class="btn">Create Notebook</button>
+      </div>
+    </form>
+    
+    <% if (notebooks.length === 0) { %>
+      <p>No notebooks yet. Create your first notebook!</p>
+    <% } else { %>
+      <ul class="notebook-list">
+        <% notebooks.forEach(notebook => { %>
+          <li>
+            <a href="/?notebook=<%= encodeURIComponent(notebook) %>">
+              <h3><%= notebook %></h3>
+            </a>
+            <form action="/notebooks/<%= encodeURIComponent(notebook) %>/delete" method="POST">
+              <button type="submit" class="btn danger">Delete</button>
+            </form>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </div>
+</body>
+</html>

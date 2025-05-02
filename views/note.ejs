@@ -11,6 +11,11 @@
     <h1><%= note.title %></h1>
     
     <div class="meta">
+      <% if (note.notebook) { %>
+        <span class="notebook">Notebook: 
+          <a href="/?notebook=<%= encodeURIComponent(note.notebook) %>"><%= note.notebook %></a>
+        </span>
+      <% } %>
       <span class="date">Created: <%= new Date(note.createdAt).toLocaleString() %></span>
       <% if (note.updatedAt !== note.createdAt) { %>
         <span class="date">Updated: <%= new Date(note.updatedAt).toLocaleString() %></span>
@@ -38,6 +43,24 @@
     <div class="note-content">
       <%- note.htmlContent %>
     </div>
+    
+    <% if (note.attachments && note.attachments.length > 0) { %>
+      <div class="attachments">
+        <h3>Attachments</h3>
+        <ul>
+          <% note.attachments.forEach(attachment => { %>
+            <li>
+              <a href="<%= attachment.path %>" target="_blank"><%= attachment.name %></a>
+              <% if (attachment.path.match(/\.(jpg|jpeg|png|gif)$/i)) { %>
+                <div class="attachment-preview">
+                  <img src="<%= attachment.path %>" alt="<%= attachment.name %>">
+                </div>
+              <% } %>
+            </li>
+          <% }) %>
+        </ul>
+      </div>
+    <% } %>
     
     <div class="actions">
       <a href="/notes/<%= id %>/edit" class="btn">Edit</a>

@@ -10,10 +10,22 @@
   <div class="container">
     <h1><%= note ? 'Edit Note' : 'Create New Note' %></h1>
     
-    <form action="<%= note ? `/notes/${id}` : '/notes' %>" method="POST">
+    <form action="<%= note ? `/notes/${id}` : '/notes' %>" method="POST" enctype="multipart/form-data">
       <% if (note) { %>
         <input type="hidden" name="createdAt" value="<%= note.createdAt %>">
       <% } %>
+      
+      <div class="form-group">
+        <label for="notebook">Notebook (optional)</label>
+        <select id="notebook" name="notebook">
+          <option value="">-- No Notebook --</option>
+          <% notebooks.forEach(notebook => { %>
+            <option value="<%= notebook %>" <%= note && note.notebook === notebook ? 'selected' : '' %>>
+              <%= notebook %>
+            </option>
+          <% }) %>
+        </select>
+      </div>
       
       <div class="form-group">
         <label for="title">Title</label>
@@ -37,32 +49,95 @@
                value="<%= note && note.tags ? note.tags.join(', ') : '' %>">
       </div>
       
+      <div class="form-group">
+        <label for="attachments">Attachments (max 5 files)</label>
+        <input type="file" id="attachments" name="attachments" multiple>
+      </div>
+      
+      <% if (note && note.attachments && note.attachments.length > 0) { %>
+        <div class="form-group">
+          <label>Existing Attachments</label>
+          <ul class="attachments-list">
+            <% note.attachments.forEach(attachment => { %>
+              <li>
+                <a href="<%= attachment.path %>" target="_blank"><%= attachment.name %></a>
+                <a href="/notes/<%= id %>/attachments/<%= attachment.path.split('/').pop() %>/delete" 
+                   class="btn danger small">Delete</a>
+              </li>
+            <% }) %>
+          </ul>
+        </div>
+      <% } %>
+      
+      <input type="hidden" id="pastedImages" name="pastedImages" value="">
+      
       <div class="actions">
         <button type="submit" class="btn">Save</button>
         <a href="<%= note ? `/notes/${id}` : '/' %>" class="btn secondary">Cancel</a>
       </div>
     </form>
     
-    <% if (note) { %>
-      <div class="markdown-preview">
-        <h3>Preview</h3>
-        <div id="preview-content"></div>
-      </div>
-      
-      <script>
-        // Live Markdown preview
-        const contentTextarea = document.getElementById('content');
-        const previewContent = document.getElementById('preview-content');
-        
-        contentTextarea.addEventListener('input', function() {
-          // In a real app, you'd use a proper Markdown parser
-          previewContent.innerHTML = marked.parse(this.value);
-        });
-        
-        // Initial preview
-        previewContent.innerHTML = marked.parse(contentTextarea.value);
-      </script>
-    <% } %>
+    <div class="markdown-preview">
+      <h3>Preview</h3>
+      <div id="preview-content"></div>
+    </div>
   </div>
+
+  <script src="/js/clipboard.js"></script>
+  <script>
+    // Handle pasted images
+    const contentTextarea = document.getElementById('content');
+    const pastedImagesInput = document.getElementById('pastedImages');
+    const pastedImages = [];
+    
+    contentTextarea.addEventListener('paste', function(e) {
+      const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+      
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const blob = items[i].getAsFile();
+          const reader = new FileReader();
+          
+          reader.onload = function(event) {
+            const placeholder = `[pasted-image-${Date.now()}]`;
+            pastedImages.push({
+              placeholder,
+              data: event.target.result
+            });
+            
+            // Insert placeholder in text
+            const cursorPos = contentTextarea.selectionStart;
+            const textBefore = contentTextarea.value.substring(0, cursorPos);
+            const textAfter = contentTextarea.value.substring(cursorPos);
+            contentTextarea.value = textBefore + placeholder + textAfter;
+            
+            // Update hidden field
+            pastedImagesInput.value = JSON.stringify(pastedImages);
+            
+            // Update preview
+            updatePreview();
+          };
+          
+          reader.readAsDataURL(blob);
+          e.preventDefault();
+        }
+      }
+    });
+    
+    // Live Markdown preview
+    function updatePreview() {
+      let content = contentTextarea.value;
+      
+      // Replace image placeholders in preview
+      pastedImages.forEach(img => {
+        content = content.replace(img.placeholder, `![pasted image](${img.data})`);
+      });
+      
+      document.getElementById('preview-content').innerHTML = marked.parse(content);
+    }
+    
+    contentTextarea.addEventListener('input', updatePreview);
+    updatePreview();
+  </script>
 </body>
 </html>

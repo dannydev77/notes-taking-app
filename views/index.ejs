@@ -3,32 +3,58 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Note Taking App</title>
+  <title><%= currentNotebook ? `${currentNotebook} - ` : '' %>Note Taking App</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
   <div class="container">
-    <h1>My Notes</h1>
+    <h1>
+      <%= currentNotebook ? `${currentNotebook} Notebook` : 'My Notes' %>
+      <% if (currentNotebook) { %>
+        <span class="notebook-badge"><%= currentNotebook %></span>
+      <% } %>
+    </h1>
     
     <div class="toolbar">
-      <a href="/notes/new" class="btn">Create New Note</a>
+      <div class="toolbar-left">
+        <a href="/notes/new" class="btn">Create New Note</a>
+        <a href="/notebooks" class="btn">Manage Notebooks</a>
+      </div>
       
       <form action="/" method="GET" class="search-form">
+        <input type="hidden" name="notebook" value="<%= currentNotebook %>">
         <input type="text" name="search" placeholder="Search notes..." value="<%= searchQuery %>">
         <button type="submit" class="btn">Search</button>
-        <a href="/" class="btn secondary">Clear</a>
+        <a href="/?notebook=<%= currentNotebook %>" class="btn secondary">Clear</a>
       </form>
     </div>
     
     <div class="filters">
+      <% if (notebooks.length > 0) { %>
+        <div class="filter-group">
+          <h3>Notebooks</h3>
+          <ul>
+            <li><a href="/" class="<%= !currentNotebook ? 'active' : '' %>">All Notes</a></li>
+            <% notebooks.forEach(notebook => { %>
+              <li>
+                <a href="/?notebook=<%= encodeURIComponent(notebook) %>" 
+                   class="<%= currentNotebook === notebook ? 'active' : '' %>">
+                  <%= notebook %>
+                </a>
+              </li>
+            <% }) %>
+          </ul>
+        </div>
+      <% } %>
+      
       <% if (categories.length > 0) { %>
         <div class="filter-group">
           <h3>Categories</h3>
           <ul>
-            <li><a href="/" class="<%= !selectedCategory ? 'active' : '' %>">All</a></li>
+            <li><a href="/?notebook=<%= currentNotebook %>" class="<%= !selectedCategory ? 'active' : '' %>">All</a></li>
             <% categories.forEach(category => { %>
               <li>
-                <a href="/?category=<%= encodeURIComponent(category) %>" 
+                <a href="/?notebook=<%= currentNotebook %>&category=<%= encodeURIComponent(category) %>" 
                    class="<%= selectedCategory === category ? 'active' : '' %>">
                   <%= category %>
                 </a>
@@ -42,10 +68,10 @@
         <div class="filter-group">
           <h3>Tags</h3>
           <ul>
-            <li><a href="/" class="<%= !selectedTag ? 'active' : '' %>">All</a></li>
+            <li><a href="/?notebook=<%= currentNotebook %>" class="<%= !selectedTag ? 'active' : '' %>">All</a></li>
             <% tags.forEach(tag => { %>
               <li>
-                <a href="/?tag=<%= encodeURIComponent(tag) %>" 
+                <a href="/?notebook=<%= currentNotebook %>&tag=<%= encodeURIComponent(tag) %>" 
                    class="<%= selectedTag === tag ? 'active' : '' %>">
                   #<%= tag %>
                 </a>
@@ -69,7 +95,15 @@
                 <% if (note.updatedAt !== note.createdAt) { %>
                   <span class="date">(updated <%= new Date(note.updatedAt).toLocaleString() %>)</span>
                 <% } %>
+                <% if (note.notebook) { %>
+                  <span class="notebook"><%= note.notebook %></span>
+                <% } %>
               </div>
+              <% if (note.attachments && note.attachments.length > 0) { %>
+                <div class="attachments-badge">
+                  <%= note.attachments.length %> attachment<%= note.attachments.length !== 1 ? 's' : '' %>
+                </div>
+              <% } %>
               <% if (note.categories && note.categories.length > 0) { %>
                 <div class="categories">
                   <% note.categories.forEach(category => { %>
